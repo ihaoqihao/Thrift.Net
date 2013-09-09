@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>zookeeper.net</id>
+    <version>1.0.0.8</version>
+    <title>zookeeper .net async client</title>
+    <authors>sodao</authors>
+    <owners>sodao</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>zookeeper .net async client</description>
+    <dependencies>
+      <dependency id="fastsocket_client" version="1.0.0.2" />
+    </dependencies>
+  </metadata>
+</package>
