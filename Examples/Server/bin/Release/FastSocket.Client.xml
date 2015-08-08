@@ -252,12 +252,10 @@
             <param name="name"></param>
             <param name="connection"></param>
         </member>
-        <member name="M:Sodao.FastSocket.Client.PooledSocketClient`1.OnServerPoolServerAvailable(System.String,Sodao.FastSocket.SocketBase.IConnection)">
+        <member name="M:Sodao.FastSocket.Client.PooledSocketClient`1.OnServerPoolServerAvailable">
             <summary>
             on server available
             </summary>
-            <param name="name"></param>
-            <param name="connection"></param>
         </member>
         <member name="M:Sodao.FastSocket.Client.PooledSocketClient`1.Send(Sodao.FastSocket.Client.Request{`0})">
             <summary>

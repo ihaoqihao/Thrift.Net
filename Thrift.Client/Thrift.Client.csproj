@@ -34,8 +34,17 @@
     <DocumentationFile>bin\Release\Thrift.Client.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="FastSocket.Client">
+      <HintPath>..\packages\fastsocket_client_1.0.0.6.1.0.0.1\lib\net40\FastSocket.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="FastSocket.SocketBase">
+      <HintPath>..\packages\fastsocket_base_1.0.0.6.1.0.0.1\lib\net40\FastSocket.SocketBase.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
+    <Reference Include="Zookeeper">
+      <HintPath>..\packages\zookeeper.net_1.0.0.1.1.0.0.8\lib\net40\Zookeeper.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\DiscoveryConfig.cs" />
@@ -60,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="packages.config" />
     <None Include="zookeeper.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

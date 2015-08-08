@@ -2229,25 +2229,12 @@
             <param name="defaultWatcher"></param>
             <exception cref="T:System.ArgumentNullException">connectionString is null or empty.</exception>
         </member>
-        <member name="M:Sodao.Zookeeper.ZookClient.InitServerPool">
+        <member name="M:Sodao.Zookeeper.ZookClient.OnEndPointAlready(System.String,Sodao.FastSocket.SocketBase.IConnection)">
             <summary>
-            InitServerPool
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookClient.OnServerPoolServerAvailable(System.String,Sodao.FastSocket.SocketBase.IConnection)">
-            <summary>
-            on server available
+            on endPoint already
             </summary>
             <param name="name"></param>
             <param name="connection"></param>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookClient.OnSendFailed(Sodao.FastSocket.SocketBase.IConnection,Sodao.FastSocket.Client.Request{Sodao.Zookeeper.ZookResponse})">
-            <summary>
-            OnSendFailed
-            </summary>
-            <param name="connection"></param>
-            <param name="request"></param>
         </member>
         <member name="M:Sodao.Zookeeper.ZookClient.OnDisconnected(Sodao.FastSocket.SocketBase.IConnection,System.Exception)">
             <summary>
@@ -2256,12 +2243,12 @@
             <param name="connection"></param>
             <param name="ex"></param>
         </member>
-        <member name="M:Sodao.Zookeeper.ZookClient.HandleUnknowResponse(Sodao.FastSocket.SocketBase.IConnection,Sodao.Zookeeper.ZookResponse)">
+        <member name="M:Sodao.Zookeeper.ZookClient.OnReceivedUnknowMessage(Sodao.FastSocket.SocketBase.IConnection,Sodao.Zookeeper.ZookResponse)">
             <summary>
             处理未知response
             </summary>
             <param name="connection"></param>
-            <param name="response"></param>
+            <param name="message"></param>
         </member>
         <member name="M:Sodao.Zookeeper.ZookClient.AddAuthInfo(System.String,System.Byte[])">
             <summary>
@@ -2483,6 +2470,13 @@
             <param name="watcher"></param>
             <returns></returns>
         </member>
+        <member name="M:Sodao.Zookeeper.ZookClient.ConnectToZookeeper(Sodao.FastSocket.SocketBase.IConnection)">
+            <summary>
+            connecto to zookeeper
+            </summary>
+            <param name="connection"></param>
+            <returns></returns>
+        </member>
         <member name="M:Sodao.Zookeeper.ZookClient.ResetWatches(Sodao.FastSocket.SocketBase.IConnection)">
             <summary>
             reset watches
@@ -2494,21 +2488,6 @@
             reset auth info
             </summary>
             <param name="connection"></param>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookClient.SendPacket(Sodao.FastSocket.SocketBase.Packet)">
-            <summary>
-            send packet
-            </summary>
-            <param name="packet"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookClient.SendPacket(Sodao.FastSocket.SocketBase.IConnection,Sodao.FastSocket.SocketBase.Packet)">
-            <summary>
-            send packet
-            </summary>
-            <param name="connection"></param>
-            <param name="packet"></param>
-            <returns></returns>
         </member>
         <member name="M:Sodao.Zookeeper.ZookClient.ExecuteAsync``1(System.Int32,Sodao.Zookeeper.Data.OpCode,Sodao.Zookeeper.Data.IRecord,System.Action{System.Threading.Tasks.TaskCompletionSource{``0},Sodao.Zookeeper.ZookResponse},System.Object)">
             <summary>
@@ -2523,9 +2502,9 @@
             <returns></returns>
             <exception cref="T:System.ArgumentNullException">callback is null.</exception>
         </member>
-        <member name="M:Sodao.Zookeeper.ZookClient.StartLoopPing">
+        <member name="M:Sodao.Zookeeper.ZookClient.StartPing">
             <summary>
-            start loop ping
+            start ping
             </summary>
         </member>
         <member name="M:Sodao.Zookeeper.ZookClient.CloseSession">
@@ -2575,117 +2554,36 @@
             <param name="clientName"></param>
             <returns></returns>
         </member>
-        <member name="T:Sodao.Zookeeper.ZookServerPool">
-            <summary>
-            zookeeper server pool
-            </summary>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookServerPool.Acquire(System.Byte[])">
-            <summary>
-            Acquire
-            </summary>
-            <param name="hash"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookServerPool.Acquire">
-            <summary>
-            Acquire
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookServerPool.GetAllNodeNames">
-            <summary>
-            GetAllNodeNames
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookServerPool.TryRegisterNode(System.String,System.Net.EndPoint)">
-            <summary>
-            TryRegisterNode
-            </summary>
-            <param name="name"></param>
-            <param name="endPoint"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookServerPool.UnRegisterNode(System.String)">
-            <summary>
-            UnRegisterNode
-            </summary>
-            <param name="name"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookServerPool.SetOptions(Sodao.Zookeeper.ZookClient,System.String)">
-            <summary>
-            SetOptions
-            </summary>
-            <param name="zkClient"></param>
-            <param name="connectionString"></param>
-            <exception cref="T:System.ArgumentNullException">zkClient is null</exception>
-            <exception cref="T:System.ArgumentNullException">connectionString is null or empty.</exception>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookServerPool.CreateSocket">
-            <summary>
-            create socket connection
-            </summary>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookServerPool.ConnectToZookeeper(System.String,Sodao.FastSocket.SocketBase.IConnection)">
-            <summary>
-            connect to zookeeper
-            </summary>
-            <param name="name"></param>
-            <param name="connection"></param>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookServerPool.OnDisconnected(Sodao.FastSocket.SocketBase.IConnection,System.Exception)">
-            <summary>
-            disconnected
-            </summary>
-            <param name="connection"></param>
-            <param name="ex"></param>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookServerPool.FireConnected(System.String,Sodao.FastSocket.SocketBase.IConnection)">
-            <summary>
-            fire connected
-            </summary>
-            <param name="name"></param>
-            <param name="connection"></param>
-        </member>
-        <member name="M:Sodao.Zookeeper.ZookServerPool.FireServerAvailable(System.String,Sodao.FastSocket.SocketBase.IConnection)">
-            <summary>
-            fire ServerAvailable
-            </summary>
-            <param name="name"></param>
-            <param name="connection"></param>
-        </member>
-        <member name="E:Sodao.Zookeeper.ZookServerPool.Connected">
-            <summary>
-            connected
-            </summary>
-        </member>
-        <member name="E:Sodao.Zookeeper.ZookServerPool.ServerAvailable">
-            <summary>
-            serverAvailable
-            </summary>
-        </member>
         <member name="T:Sodao.Zookeeper.ZookProtocol">
             <summary>
             zookeeper protocol
             </summary>
         </member>
-        <member name="M:Sodao.Zookeeper.ZookProtocol.FindResponse(Sodao.FastSocket.SocketBase.IConnection,System.ArraySegment{System.Byte},System.Int32@)">
+        <member name="M:Sodao.Zookeeper.ZookProtocol.Parse(Sodao.FastSocket.SocketBase.IConnection,System.ArraySegment{System.Byte},System.Int32@)">
             <summary>
-            find response
+            Parse
             </summary>
             <param name="connection"></param>
             <param name="buffer"></param>
             <param name="readlength"></param>
             <returns></returns>
         </member>
+        <member name="P:Sodao.Zookeeper.ZookProtocol.DefaultSyncSeqId">
+            <summary>
+            defautl seqId
+            </summary>
+        </member>
+        <member name="P:Sodao.Zookeeper.ZookProtocol.IsAsync">
+            <summary>
+            true
+            </summary>
+        </member>
         <member name="T:Sodao.Zookeeper.ZookResponse">
             <summary>
             zookeeper response
             </summary>
         </member>
-        <member name="F:Sodao.Zookeeper.ZookResponse.XID">
+        <member name="F:Sodao.Zookeeper.ZookResponse.XId">
             <summary>
             xid
             </summary>
@@ -2695,7 +2593,7 @@
             payload
             </summary>
         </member>
-        <member name="F:Sodao.Zookeeper.ZookResponse.ZXID">
+        <member name="F:Sodao.Zookeeper.ZookResponse.ZXId">
             <summary>
             zxid，事务ID
             </summary>
@@ -2740,9 +2638,9 @@
             <param name="path"></param>
             <returns></returns>
         </member>
-        <member name="P:Sodao.Zookeeper.ZookResponse.SeqID">
+        <member name="P:Sodao.Zookeeper.ZookResponse.SeqId">
             <summary>
-            get seqID
+            get seqId
             </summary>
         </member>
         <member name="T:Sodao.Zookeeper.ZookWatcherManager">

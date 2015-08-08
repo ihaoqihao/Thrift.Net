@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Sodao.FastSocket.Server;
+using Sodao.FastSocket.Server.Messaging;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Net;
-using Sodao.FastSocket.Server;
-using Sodao.FastSocket.Server.Command;
 
 namespace Thrift.Server
 {
@@ -13,7 +12,8 @@ namespace Thrift.Server
     static public class ThriftServerManager
     {
         #region Private Members
-        static private readonly List<SocketServer<ThriftCommandInfo>> _serverList = new List<SocketServer<ThriftCommandInfo>>();
+        static private readonly List<SocketServer<ThriftMessage>> _serverList =
+            new List<SocketServer<ThriftMessage>>();
         #endregion
 
         #region Public Methods
@@ -51,13 +51,13 @@ namespace Thrift.Server
                     .GetConstructor(new Type[] { objThriftService.GetType() })
                     .Invoke(new object[] { objThriftService }) as Thrift.IAsyncProcessor;
 
-                var socketServer = new ThriftServer(new ThriftService(objThriftProcessor),
+                var socketServer = new ThriftServer(serviceConfig.Port,
+                    new ThriftService(objThriftProcessor),
                     serviceConfig.SocketBufferSize,
                     serviceConfig.MessageBufferSize,
                     serviceConfig.MaxMessageSize,
                     serviceConfig.MaxConnections);
 
-                socketServer.AddListener(serviceConfig.Name, new IPEndPoint(IPAddress.Any, serviceConfig.Port));
                 socketServer.ApplyConfig(serviceConfig);
 
                 _serverList.Add(socketServer);

@@ -362,153 +362,92 @@
             <param name="connection"></param>
             <param name="packet"></param>
         </member>
-        <member name="T:Sodao.FastSocket.SocketBase.Log.ConsoleListener">
+        <member name="T:Sodao.FastSocket.SocketBase.Log.ConsoleLogListener">
             <summary>
-            console trace listener
+            console log listener
             </summary>
         </member>
-        <member name="T:Sodao.FastSocket.SocketBase.Log.ITraceListener">
+        <member name="T:Sodao.FastSocket.SocketBase.Log.ILogListener">
             <summary>
-            trace listener interface.
+            log interface
             </summary>
         </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.ITraceListener.Debug(System.String)">
+        <member name="M:Sodao.FastSocket.SocketBase.Log.ILogListener.Debug(System.String)">
             <summary>
             debug
             </summary>
             <param name="message"></param>
         </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.ITraceListener.Error(System.String,System.Exception)">
+        <member name="M:Sodao.FastSocket.SocketBase.Log.ILogListener.Error(System.String,System.Exception)">
             <summary>
             error
             </summary>
             <param name="message"></param>
             <param name="ex"></param>
         </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.ITraceListener.Info(System.String)">
+        <member name="M:Sodao.FastSocket.SocketBase.Log.ILogListener.Info(System.String)">
             <summary>
             info
             </summary>
             <param name="message"></param>
         </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.ConsoleListener.Debug(System.String)">
+        <member name="M:Sodao.FastSocket.SocketBase.Log.ConsoleLogListener.Debug(System.String)">
             <summary>
             debug
             </summary>
             <param name="message"></param>
         </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.ConsoleListener.Error(System.String,System.Exception)">
+        <member name="M:Sodao.FastSocket.SocketBase.Log.ConsoleLogListener.Error(System.String,System.Exception)">
             <summary>
             error
             </summary>
             <param name="message"></param>
             <param name="ex"></param>
         </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.ConsoleListener.Info(System.String)">
+        <member name="M:Sodao.FastSocket.SocketBase.Log.ConsoleLogListener.Info(System.String)">
             <summary>
             info
             </summary>
             <param name="message"></param>
         </member>
-        <member name="T:Sodao.FastSocket.SocketBase.Log.DiagnosticListener">
+        <member name="T:Sodao.FastSocket.SocketBase.Log.Logger">
             <summary>
-            diagnostic listener
+            logger
             </summary>
         </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.DiagnosticListener.Debug(System.String)">
+        <member name="M:Sodao.FastSocket.SocketBase.Log.Logger.#cctor">
             <summary>
-            debug
-            </summary>
-            <param name="message"></param>
-        </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.DiagnosticListener.Error(System.String,System.Exception)">
-            <summary>
-            error
-            </summary>
-            <param name="message"></param>
-            <param name="ex"></param>
-        </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.DiagnosticListener.Info(System.String)">
-            <summary>
-            info
-            </summary>
-            <param name="message"></param>
-        </member>
-        <member name="T:Sodao.FastSocket.SocketBase.Log.Trace">
-            <summary>
-            trace
+            static new
             </summary>
         </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.Trace.EnableConsole">
-            <summary>
-            enable console trace listener
-            </summary>
-        </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.Trace.EnableDiagnostic">
-            <summary>
-            enable diagnostic
-            </summary>
-        </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.Trace.AddListener(Sodao.FastSocket.SocketBase.Log.ITraceListener)">
+        <member name="M:Sodao.FastSocket.SocketBase.Log.Logger.AddListenner(Sodao.FastSocket.SocketBase.Log.ILogListener)">
             <summary>
             add listener
             </summary>
             <param name="listener"></param>
             <exception cref="T:System.ArgumentNullException">listener is null</exception>
         </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.Trace.Debug(System.String)">
+        <member name="M:Sodao.FastSocket.SocketBase.Log.Logger.Debug(System.String)">
             <summary>
             debug
             </summary>
             <param name="message"></param>
             <exception cref="T:System.ArgumentNullException">message is null</exception>
         </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.Trace.Info(System.String)">
+        <member name="M:Sodao.FastSocket.SocketBase.Log.Logger.Info(System.String)">
             <summary>
             info
             </summary>
             <param name="message"></param>
             <exception cref="T:System.ArgumentNullException">message is null</exception>
         </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.Trace.Error(System.String,System.Exception)">
+        <member name="M:Sodao.FastSocket.SocketBase.Log.Logger.Error(System.String,System.Exception)">
             <summary>
             error
             </summary>
             <param name="message"></param>
             <param name="ex"></param>
             <exception cref="T:System.ArgumentNullException">message is null</exception>
-        </member>
-        <member name="T:Sodao.FastSocket.SocketBase.Log.ListenerWrapper">
-            <summary>
-            trace listener wrapper
-            </summary>
-        </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.ListenerWrapper.#ctor(System.Action{System.String},System.Action{System.String,System.Exception},System.Action{System.String})">
-            <summary>
-            new
-            </summary>
-            <param name="onDebug"></param>
-            <param name="onError"></param>
-            <param name="onInfo"></param>
-        </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.ListenerWrapper.Debug(System.String)">
-            <summary>
-            debug
-            </summary>
-            <param name="message"></param>
-        </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.ListenerWrapper.Error(System.String,System.Exception)">
-            <summary>
-            error
-            </summary>
-            <param name="message"></param>
-            <param name="ex"></param>
-        </member>
-        <member name="M:Sodao.FastSocket.SocketBase.Log.ListenerWrapper.Info(System.String)">
-            <summary>
-            info
-            </summary>
-            <param name="message"></param>
         </member>
         <member name="T:Sodao.FastSocket.SocketBase.Packet">
             <summary>

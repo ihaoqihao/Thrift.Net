@@ -1,9 +1,9 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
-using Sodao.FastSocket.SocketBase.Utils;
+﻿using Sodao.FastSocket.SocketBase.Utils;
 using Sodao.Zookeeper;
 using Sodao.Zookeeper.Data;
+using System;
+using System.Diagnostics;
+using System.Linq;
 
 namespace Thrift.Server
 {

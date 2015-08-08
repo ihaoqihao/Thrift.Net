@@ -1,15 +1,15 @@
-﻿using System;
-using Sodao.FastSocket.Server;
-using Sodao.FastSocket.Server.Command;
+﻿using Sodao.FastSocket.Server;
+using Sodao.FastSocket.Server.Messaging;
 using Sodao.FastSocket.Server.Protocol;
 using Sodao.FastSocket.SocketBase.Utils;
+using System;
 
 namespace Thrift.Server
 {
     /// <summary>
     /// thrift server
     /// </summary>
-    public class ThriftServer : SocketServer<ThriftCommandInfo>
+    public class ThriftServer : SocketServer<ThriftMessage>
     {
         #region Private Members
         private IServiceRegistry[] _arrRegistry = null;
@@ -19,17 +19,19 @@ namespace Thrift.Server
         /// <summary>
         /// new
         /// </summary>
+        /// <param name="port"></param>
         /// <param name="socketService"></param>
         /// <param name="socketBufferSize"></param>
         /// <param name="messageBufferSize"></param>
         /// <param name="maxMessageSize"></param>
         /// <param name="maxConnections"></param>
-        public ThriftServer(ThriftService socketService,
+        public ThriftServer(int port,
+            ThriftService socketService,
             int socketBufferSize,
             int messageBufferSize,
             int maxMessageSize,
             int maxConnections)
-            : base(socketService, new ThriftProtocol(), socketBufferSize, messageBufferSize, maxMessageSize, maxConnections)
+            : base(port, socketService, new ThriftProtocol(), socketBufferSize, messageBufferSize, maxMessageSize, maxConnections)
         {
         }
         #endregion
