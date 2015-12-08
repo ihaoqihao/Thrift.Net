@@ -34,30 +34,32 @@
     <DocumentationFile>bin\Release\Thrift.Client.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FastSocket.Client">
-      <HintPath>..\packages\fastsocket_client_1.0.0.6.1.0.0.1\lib\net40\FastSocket.Client.dll</HintPath>
+    <Reference Include="FastSocket.Client, Version=1.0.0.6, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\fastsocket_client_1.0.0.6.1.0.0.6\lib\net40\FastSocket.Client.dll</HintPath>
     </Reference>
-    <Reference Include="FastSocket.SocketBase">
-      <HintPath>..\packages\fastsocket_base_1.0.0.6.1.0.0.1\lib\net40\FastSocket.SocketBase.dll</HintPath>
+    <Reference Include="FastSocket.SocketBase, Version=1.0.0.6, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\fastsocket_base_1.0.0.6.1.0.0.3\lib\net40\FastSocket.SocketBase.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
-    <Reference Include="Zookeeper">
-      <HintPath>..\packages\zookeeper.net_1.0.0.1.1.0.0.8\lib\net40\Zookeeper.dll</HintPath>
+    <Reference Include="Zookeeper, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\zookeeper.net_1.0.0.1.1.0.1.3\lib\net40\Zookeeper.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Config\DiscoveryConfig.cs" />
-    <Compile Include="Config\ZookeeperConfig.cs" />
-    <Compile Include="IServiceDiscovery.cs" />
-    <Compile Include="LocalSettingDiscovery.cs" />
+    <Compile Include="Config\Discovery.cs" />
+    <Compile Include="Config\EndPoint.cs" />
+    <Compile Include="Config\EndPointCollection.cs" />
+    <Compile Include="Config\Zookeeper.cs" />
     <Compile Include="ThriftClient.cs" />
-    <Compile Include="Config\ServerCollection.cs" />
-    <Compile Include="Config\ServerConfig.cs" />
     <Compile Include="Config\ServiceCollection.cs" />
-    <Compile Include="Config\ServiceConfig.cs" />
+    <Compile Include="Config\Service.cs" />
     <Compile Include="Config\ThriftConfigSection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ThriftClientFactory.cs" />
     <Compile Include="ThriftClientManager.cs" />
     <Compile Include="ZoomkeeperDiscovery.cs" />
   </ItemGroup>

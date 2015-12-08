@@ -51,15 +51,13 @@ namespace Thrift.Server
                     .GetConstructor(new Type[] { objThriftService.GetType() })
                     .Invoke(new object[] { objThriftService }) as Thrift.IAsyncProcessor;
 
-                var socketServer = new ThriftServer(serviceConfig.Port,
+                var socketServer = new ThriftServer(serviceConfig,
+                    serviceConfig.Port,
                     new ThriftService(objThriftProcessor),
                     serviceConfig.SocketBufferSize,
                     serviceConfig.MessageBufferSize,
                     serviceConfig.MaxMessageSize,
                     serviceConfig.MaxConnections);
-
-                socketServer.ApplyConfig(serviceConfig);
-
                 _serverList.Add(socketServer);
             }
         }
@@ -68,14 +66,14 @@ namespace Thrift.Server
         /// </summary>
         static public void Start()
         {
-            foreach (var child in _serverList) child.Start();
+            _serverList.ForEach(server => server.Start());
         }
         /// <summary>
         /// stop thrift service list
         /// </summary>
         static public void Stop()
         {
-            foreach (var child in _serverList) child.Stop();
+            _serverList.ForEach(server => server.Stop());
         }
         #endregion
     }

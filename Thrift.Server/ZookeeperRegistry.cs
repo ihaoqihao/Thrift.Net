@@ -4,70 +4,90 @@ using Sodao.Zookeeper.Data;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Thrift.Server
 {
     /// <summary>
     /// zookeeper registry
     /// </summary>
-    public sealed class ZookeeperRegistry : IServiceRegistry
+    public sealed class ZookeeperRegistry : IDisposable
     {
         #region Private Members
-        private Config.ServiceConfig _config = null;
-        private string _methods = string.Empty;
-        private SessionNode _sessionNode = null;
+        private readonly IZookClient _zk = null;
+        private readonly SessionNode _sessionNode = null;
+        private int _isdisposed = 0;
         #endregion
 
-        #region IServiceRegistry Members
+        #region Constructors
         /// <summary>
-        /// set config
+        /// free
         /// </summary>
-        /// <param name="config"></param>
-        public void Init(Config.ServiceConfig config)
+        ~ZookeeperRegistry()
         {
-            if (config == null) throw new ArgumentNullException("config");
-            this._config = config;
-            this._methods = string.Join(",", Type.GetType(config.ServiceType).GetInterfaces()[0].GetMethods().Select(c => c.Name).ToArray());
+            this.Dispose();
         }
         /// <summary>
-        /// start
+        /// new
         /// </summary>
-        public void Start()
+        /// <param name="port"></param>
+        /// <param name="serviceType"></param>
+        /// <param name="zkConfigPath"></param>
+        /// <param name="zkConfigName"></param>
+        /// <param name="zNode"></param>
+        /// <param name="owner"></param>
+        public ZookeeperRegistry(int port, string serviceType,
+            string zkConfigPath, string zkConfigName, string zNode, string owner)
         {
-            if (this._config == null ||
-                this._config.Registry == null || this._config.Registry.Zookeeper == null) return;
+            if (string.IsNullOrEmpty(serviceType)) throw new ArgumentNullException("serviceType");
+            if (string.IsNullOrEmpty(zkConfigPath)) throw new ArgumentNullException("zkConfigPath");
+            if (string.IsNullOrEmpty(zkConfigName)) throw new ArgumentNullException("zkConfigName");
+            if (string.IsNullOrEmpty(zNode)) throw new ArgumentNullException("zNode");
 
-            var keeperConfig = this._config.Registry.Zookeeper;
-            var zk = ZookClientPool.Get(keeperConfig.ConfigPath, "zookeeper", keeperConfig.ConfigName);
-
-            //ensure root node...
-            var nodes = new NodeInfo[2];
-            nodes[0] = new NodeInfo(string.Concat("/", keeperConfig.ZNode), null, IDs.OPEN_ACL_UNSAFE, CreateModes.Persistent);
-            nodes[1] = new NodeInfo(string.Concat("/", keeperConfig.ZNode, "/providers"), null, IDs.OPEN_ACL_UNSAFE, CreateModes.Persistent);
-            NodeFactory.TryEnsureCreate(zk, nodes, () =>
-            {
-                var currProcess = Process.GetCurrentProcess();
-                var path = string.Concat("/", keeperConfig.ZNode, "/providers/", Uri.EscapeDataString(string.Format(
-                    "thrift2://{0}:{1}/{2}?anyhost=true&application={3}&dispatcher=message&dubbo=2.5.1&interface={2}&loadbalance=roundrobin&methods={7}&owner={4}&pid={5}&revision=0.0.2-SNAPSHOT&side=provider&threads=100&timestamp={6}",
-                    IPUtility.GetLocalIntranetIP().ToString(),
-                    this._config.Port.ToString(),
-                    keeperConfig.ZNode,
-                    currProcess.ProcessName,
-                    keeperConfig.Owner,
-                    currProcess.Id.ToString(),
-                    Date.ToMillisecondsSinceEpoch(DateTime.UtcNow).ToString(),
-                    this._methods)));
-                this._sessionNode = new SessionNode(zk, path, null, IDs.OPEN_ACL_UNSAFE);
+            this._zk = ZookClientPool.Get(zkConfigPath, "zookeeper", zkConfigName);
+            this.RegisterZNode(new NodeInfo[]
+            { 
+                new NodeInfo(string.Concat("/", zNode), null, IDs.OPEN_ACL_UNSAFE, CreateModes.Persistent),
+                new NodeInfo(string.Concat("/", zNode, "/providers"), null, IDs.OPEN_ACL_UNSAFE, CreateModes.Persistent)
             });
+            this._sessionNode = new SessionNode(this._zk,
+                string.Concat("/", zNode, "/providers/", Uri.EscapeDataString(string.Format(
+                    @"thrift2://{0}:{1}/{2}?anyhost=true&application={3}&dispatcher=message&dubbo=2.5.1&
+                    interface={2}&loadbalance=roundrobin&methods={7}&owner={4}&pid={5}&revision=0.0.2-SNAPSHOT&
+                    side=provider&threads=100&timestamp={6}",
+                    IPUtility.GetLocalIntranetIP().ToString(),
+                    port.ToString(), zNode, Process.GetCurrentProcess().ProcessName, owner ?? "", Process.GetCurrentProcess().Id.ToString(),
+                    Date.ToMillisecondsSinceEpoch(DateTime.UtcNow).ToString(),
+                    string.Join(",", Type.GetType(serviceType).GetInterfaces()[0].GetMethods().Select(c => c.Name).ToArray())))),
+                    null, IDs.OPEN_ACL_UNSAFE);
         }
+        #endregion
+
+        #region Private Methods
         /// <summary>
-        /// stop
+        /// register zk node
         /// </summary>
-        public void Stop()
+        /// <param name="arrNodes"></param>
+        private void RegisterZNode(NodeInfo[] arrNodes)
         {
-            if (this._sessionNode == null) return;
-            this._sessionNode.Close();
-            this._sessionNode = null;
+            NodeCreator.TryCreate(this._zk, arrNodes).ContinueWith(c =>
+            {
+                if (Thread.VolatileRead(ref this._isdisposed) == 1) return;
+                TaskEx.Delay(new Random().Next(100, 1500)).ContinueWith(_ => this.RegisterZNode(arrNodes));
+            }, TaskContinuationOptions.OnlyOnFaulted);
+        }
+        #endregion
+
+        #region IDisposable Members
+        /// <summary>
+        /// dispose
+        /// </summary>
+        public void Dispose()
+        {
+            if (Interlocked.CompareExchange(ref this._isdisposed, 1, 0) == 1) return;
+            this._sessionNode.Dispose();
+            GC.SuppressFinalize(this);
         }
         #endregion
     }

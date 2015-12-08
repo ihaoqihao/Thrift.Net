@@ -1,123 +1,132 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Sodao.FastSocket.SocketBase.Utils;
+using Sodao.Zookeeper;
+using Sodao.Zookeeper.Data;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using Sodao.FastSocket.SocketBase.Utils;
-using Sodao.Zookeeper;
-using Sodao.Zookeeper.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Thrift.Client
 {
     /// <summary>
     /// zookeeper discovery
     /// </summary>
-    public sealed class ZoomkeeperDiscovery : IServiceDiscovery
+    public sealed class ZoomkeeperDiscovery : IDisposable
     {
         #region Private Members
-        private ThriftClient _thriftClient = null;
-        private Config.ServiceConfig _config = null;
-        private string _methods = string.Empty;
+        private readonly IZookClient _zk = null;
+        private readonly SessionNode _sessionNode = null;
+        private readonly ChildrenWatcher _watcher = null;
+        private readonly Action<IPEndPoint[]> _callback = null;
 
-        private SessionNode _sessionNode = null;
-        private ChildrenWatcher _watcher = null;
+        private int _isdisposed = 0;
         #endregion
 
-        #region IServiceDiscovery Members
+        #region Constructors
         /// <summary>
-        /// init
+        /// new
         /// </summary>
-        /// <param name="thriftClient"></param>
-        /// <param name="config"></param>
-        /// <exception cref="ArgumentNullException">thriftClient is null</exception>
-        /// <exception cref="ArgumentNullException">config is null</exception>
-        public void Init(ThriftClient thriftClient, Config.ServiceConfig config)
+        /// <param name="serviceType"></param>
+        /// <param name="zkConfigPath"></param>
+        /// <param name="zkConfigName"></param>
+        /// <param name="zNode"></param>
+        /// <param name="callback"></param>
+        public ZoomkeeperDiscovery(string serviceType,
+            string zkConfigPath, string zkConfigName, string zNode,
+            Action<IPEndPoint[]> callback)
         {
-            if (thriftClient == null) throw new ArgumentNullException("thriftClient");
-            if (config == null) throw new ArgumentNullException("config");
+            if (string.IsNullOrEmpty(serviceType)) throw new ArgumentNullException("serviceType");
+            if (string.IsNullOrEmpty(zkConfigPath)) throw new ArgumentNullException("zkConfigPath");
+            if (string.IsNullOrEmpty(zkConfigName)) throw new ArgumentNullException("zkConfigName");
+            if (string.IsNullOrEmpty(zNode)) throw new ArgumentNullException("zNode");
+            if (callback == null) throw new ArgumentNullException("callback");
 
-            this._thriftClient = thriftClient;
-            this._config = config;
-            this._methods = string.Join(",", Type.GetType(config.Client).GetInterfaces()[0].GetMethods().Select(c => c.Name).ToArray());
-        }
-        /// <summary>
-        /// start
-        /// </summary>
-        public void Start()
-        {
-            if (this._config == null || this._config.Discovery == null ||
-                this._config.Discovery.Zookeeper == null || string.IsNullOrEmpty(this._config.Discovery.Zookeeper.ZNode)) return;
-
-            var keeperConfig = this._config.Discovery.Zookeeper;
-            var zk = ZookClientPool.Get(keeperConfig.ConfigPath, "zookeeper", keeperConfig.ConfigName);
-
-            //ensure root node...
-            var nodes = new NodeInfo[2];
-            nodes[0] = new NodeInfo(string.Concat("/", keeperConfig.ZNode), null, IDs.OPEN_ACL_UNSAFE, CreateModes.Persistent);
-            nodes[1] = new NodeInfo(string.Concat("/", keeperConfig.ZNode, "/consumers"), null, IDs.OPEN_ACL_UNSAFE, CreateModes.Persistent);
-            NodeFactory.TryEnsureCreate(zk, nodes, () =>
+            this._callback = callback;
+            this._zk = ZookClientPool.Get(zkConfigPath, "zookeeper", zkConfigName);
+            this.RegisterZNode(new NodeInfo[]
             {
-                var currProcess = Process.GetCurrentProcess();
-                var path = string.Concat("/", keeperConfig.ZNode, "/consumers/", Uri.EscapeDataString(string.Format(
-                    "consumer://{0}/{1}?application={2}&category=consumers&check=false&dubbo=2.5.1&interface={1}&methods={6}&owner={3}&pid={4}&revision=0.0.2-SNAPSHOT&side=consumer&timestamp={5}",
+                new NodeInfo(string.Concat("/", zNode), null, IDs.OPEN_ACL_UNSAFE, CreateModes.Persistent),
+                new NodeInfo(string.Concat("/", zNode, "/consumers"), null, IDs.OPEN_ACL_UNSAFE, CreateModes.Persistent)
+            });
+            this._sessionNode = new SessionNode(this._zk,
+                string.Concat("/", zNode, "/consumers/", Uri.EscapeDataString(string.Format(
+                    @"consumer://{0}/{1}?application={2}&category=consumers&check=false&dubbo=2.5.1&
+                    interface={1}&methods={6}&owner={3}&pid={4}&revision=0.0.2-SNAPSHOT&
+                    side=consumer&timestamp={5}",
                     IPUtility.GetLocalIntranetIP().ToString(),
-                    keeperConfig.ZNode,
-                    currProcess.ProcessName,
-                    string.Empty,
-                    currProcess.Id.ToString(),
+                    zNode, Process.GetCurrentProcess().ProcessName, string.Empty, Process.GetCurrentProcess().Id.ToString(),
                     Date.ToMillisecondsSinceEpoch(DateTime.UtcNow).ToString(),
-                    this._methods)));
-                this._sessionNode = new SessionNode(zk, path, null, IDs.OPEN_ACL_UNSAFE);
-            });
+                    string.Join(",", Type.GetType(serviceType).GetInterfaces()[0].GetMethods().Select(c => c.Name).ToArray())))),
+                    null, IDs.OPEN_ACL_UNSAFE);
 
-            this._watcher = new ChildrenWatcher(zk, string.Concat("/", keeperConfig.ZNode, "/providers"), (names) =>
+            this._watcher = new ChildrenWatcher(this._zk, string.Concat("/", zNode, "/providers"), arrNodes =>
             {
-                //已存在的servers
-                var arrExistServers = this._thriftClient.GetAllNodeNames();
-                //当前从zk获取到servers
-                var arrNowServers = names.Select(s =>
+                this._callback(arrNodes.Select(c =>
                 {
-                    var t = Uri.UnescapeDataString(s);
-                    t = t.Substring(t.IndexOf(":") + 3);
-                    return t.Substring(0, t.IndexOf("/"));
-                }).ToArray();
+                    var objUri = new Uri(Uri.UnescapeDataString(c));
+                    return new IPEndPoint(IPAddress.Parse(objUri.Host), objUri.Port);
+                }).ToArray());
+                //lock (this._lockObj)
+                //{
+                //    var arrExists = this._thrift.GetAllRegisteredEndPoint().Select(c => c.Key).Distinct().ToArray();
+                //    var arrCurr = arrNodes.Select(node =>
+                //    {
+                //        var strUrl = Uri.UnescapeDataString(node);
+                //        strUrl = strUrl.Substring(strUrl.IndexOf(":") + 3);
+                //        return strUrl.Substring(0, strUrl.IndexOf("/"));
+                //    }).ToArray();
 
-                var set = new HashSet<string>(arrExistServers);
-                set.ExceptWith(arrNowServers);
-                if (set.Count > 0)
-                {
-                    foreach (var child in set) this._thriftClient.UnRegisterServerNode(child);
-                }
+                //    var set = new HashSet<string>(arrExists);
+                //    set.ExceptWith(arrCurr);
+                //    if (set.Count > 0)
+                //    {
+                //        foreach (var child in set)
+                //            this._thrift.UnRegisterEndPoint(child);
+                //    }
 
-                set = new HashSet<string>(arrNowServers);
-                set.ExceptWith(arrExistServers);
-                if (set.Count > 0)
-                {
-                    foreach (var child in set)
-                    {
-                        int index = child.IndexOf(":");
-                        this._thriftClient.RegisterServerNode(child,
-                            new IPEndPoint(IPAddress.Parse(child.Substring(0, index)), int.Parse(child.Substring(index + 1))));
-                    }
-                }
+                //    set = new HashSet<string>(arrCurr);
+                //    set.ExceptWith(arrExists);
+                //    if (set.Count > 0)
+                //    {
+                //        foreach (var child in set)
+                //        {
+                //            var i = child.IndexOf(":");
+                //            var endpoint = new IPEndPoint(IPAddress.Parse(child.Substring(0, i)), int.Parse(child.Substring(i + 1)));
+                //            this._thrift.TryRegisterEndPoint(child, new EndPoint[] { endpoint });
+                //        }
+                //    }
+                //}
             });
         }
-        /// <summary>
-        /// stop
-        /// </summary>
-        public void Stop()
-        {
-            if (this._sessionNode != null)
-            {
-                this._sessionNode.Close();
-                this._sessionNode = null;
-            }
+        #endregion
 
-            if (this._watcher != null)
+        #region Private Methods
+        /// <summary>
+        /// register zk node
+        /// </summary>
+        /// <param name="arrNodes"></param>
+        private void RegisterZNode(NodeInfo[] arrNodes)
+        {
+            NodeCreator.TryCreate(this._zk, arrNodes).ContinueWith(c =>
             {
-                this._watcher.Stop();
-                this._watcher = null;
-            }
+                if (Thread.VolatileRead(ref this._isdisposed) == 1) return;
+                TaskEx.Delay(new Random().Next(100, 1500)).ContinueWith(_ => this.RegisterZNode(arrNodes));
+            }, TaskContinuationOptions.OnlyOnFaulted);
+        }
+        #endregion
+
+        #region IDisposable Members
+        /// <summary>
+        /// dispose
+        /// </summary>
+        public void Dispose()
+        {
+            if (Interlocked.CompareExchange(ref this._isdisposed, 1, 0) == 1) return;
+            this._watcher.Dispose();
+            this._sessionNode.Dispose();
+            GC.SuppressFinalize(this);
         }
         #endregion
     }

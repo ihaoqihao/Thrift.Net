@@ -34,19 +34,23 @@
     <DocumentationFile>bin\Release\Thrift.Server.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FastSocket.Client">
-      <HintPath>..\packages\fastsocket_client_1.0.0.6.1.0.0.1\lib\net40\FastSocket.Client.dll</HintPath>
+    <Reference Include="FastSocket.Client, Version=1.0.0.6, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\fastsocket_client_1.0.0.6.1.0.0.6\lib\net40\FastSocket.Client.dll</HintPath>
     </Reference>
-    <Reference Include="FastSocket.Server">
-      <HintPath>..\packages\fastsocket_server_1.0.0.6.1.0.0.1\lib\net40\FastSocket.Server.dll</HintPath>
+    <Reference Include="FastSocket.Server, Version=1.0.0.6, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\fastsocket_server_1.0.0.6.1.0.0.4\lib\net40\FastSocket.Server.dll</HintPath>
     </Reference>
-    <Reference Include="FastSocket.SocketBase">
-      <HintPath>..\packages\fastsocket_base_1.0.0.6.1.0.0.1\lib\net40\FastSocket.SocketBase.dll</HintPath>
+    <Reference Include="FastSocket.SocketBase, Version=1.0.0.6, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\fastsocket_base_1.0.0.6.1.0.0.3\lib\net40\FastSocket.SocketBase.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
-    <Reference Include="Zookeeper">
-      <HintPath>..\packages\zookeeper.net_1.0.0.1.1.0.0.8\lib\net40\Zookeeper.dll</HintPath>
+    <Reference Include="Zookeeper, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\zookeeper.net_1.0.0.1.1.0.1.3\lib\net40\Zookeeper.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -55,7 +59,6 @@
     <Compile Include="Config\ServiceCollection.cs" />
     <Compile Include="Config\ServiceConfig.cs" />
     <Compile Include="Config\ZookeeperConfig.cs" />
-    <Compile Include="IServiceRegistry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ThriftServer.cs" />
     <Compile Include="ThriftServerManager.cs" />
@@ -72,7 +75,9 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="zookeeper.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

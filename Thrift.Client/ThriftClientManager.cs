@@ -1,76 +1,60 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 
 namespace Thrift.Client
 {
     /// <summary>
-    /// thrift client manager.
+    /// thrift client pool
     /// </summary>
     static public class ThriftClientManager
     {
-        #region Private Members
-        static private readonly Dictionary<string, object> _dicThriftClients = new Dictionary<string, object>();
-        static private readonly ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
-        #endregion
-
-        #region Static Methods
         /// <summary>
-        /// get thrift config
+        /// key:string.Concat(configPath, sectionName, serviceName)
+        /// </summary>
+        static private readonly ConcurrentDictionary<string, Lazy<Tuple<ThriftClient, object>>> _dic =
+            new ConcurrentDictionary<string, Lazy<Tuple<ThriftClient, object>>>();
+
+        /// <summary>
+        /// get
+        /// </summary>
+        /// <param name="serviceName"></param>
+        /// <returns></returns>
+        static public ThriftClient GetClient(string serviceName)
+        {
+            return GetClient(null, "thriftClient", serviceName);
+        }
+        /// <summary>
+        /// get
+        /// </summary>
+        /// <param name="sectionName"></param>
+        /// <param name="serviceName"></param>
+        /// <returns></returns>
+        static public ThriftClient GetClient(string sectionName, string serviceName)
+        {
+            return GetClient(null, sectionName, serviceName);
+        }
+        /// <summary>
+        /// get
         /// </summary>
         /// <param name="configPath"></param>
         /// <param name="sectionName"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">sectionName is null or empty</exception>
-        /// <exception cref="ArgumentNullException">config is null</exception>
-        static private Config.ThriftConfigSection GetConfig(string configPath, string sectionName)
-        {
-            if (string.IsNullOrEmpty(sectionName)) throw new ArgumentNullException("sectionName");
-
-            Config.ThriftConfigSection thriftConfig = null;
-            if (string.IsNullOrEmpty(configPath)) thriftConfig = ConfigurationManager.GetSection(sectionName) as Config.ThriftConfigSection;
-            else
-            {
-                thriftConfig = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap
-                {
-                    ExeConfigFilename = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configPath)
-                }, ConfigurationUserLevel.None).GetSection(sectionName) as Config.ThriftConfigSection;
-            }
-            return thriftConfig;
-        }
-        /// <summary>
-        /// get thrift client
-        /// </summary>
-        /// <param name="config"></param>
         /// <param name="serviceName"></param>
         /// <returns></returns>
-        /// <exception cref="ArgumentNullException">config is null</exception>
-        static private object CreateThriftClient(Config.ThriftConfigSection config, string serviceName)
+        static public ThriftClient GetClient(string configPath, string sectionName, string serviceName)
         {
-            if (config == null) throw new ArgumentNullException("config");
+            if (string.IsNullOrEmpty(sectionName)) throw new ArgumentNullException("sectionName");
+            if (string.IsNullOrEmpty(serviceName)) throw new ArgumentNullException("serviceName");
 
-            foreach (Config.ServiceConfig childService in config.Services)
-            {
-                if (childService.Name != serviceName) continue;
-
-                var thriftClient = new ThriftClient(childService.SocketBufferSize,
-                    childService.MessageBufferSize,
-                    childService.SendTimeout,
-                    childService.ReceiveTimeout);
-
-                thriftClient.ApplyConfig(childService);
-
-                thriftClient.Start();
-
-                return Type.GetType(childService.Client, true).GetConstructor(new Type[] { typeof(IThriftClient) }).Invoke(new object[] { thriftClient });
-            }
-            return null;
+            return _dic.GetOrAdd(string.Concat(configPath ?? "", "/", sectionName, "/", serviceName),
+                key => new Lazy<Tuple<ThriftClient, object>>(() =>
+                    ThriftClientFactory.Create(configPath, sectionName, serviceName),
+                    LazyThreadSafetyMode.ExecutionAndPublication)).Value.Item1;
         }
 
         /// <summary>
-        /// get proxy
+        /// get client
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
         /// <param name="serviceName"></param>
@@ -78,53 +62,53 @@ namespace Thrift.Client
         static public TClient GetClient<TClient>(string serviceName)
             where TClient : class
         {
-            return GetClient<TClient>(serviceName, null, "thriftClient");
+            return GetClient<TClient>(null, "thriftClient", serviceName);
         }
         /// <summary>
-        /// get proxy
+        /// get client
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
+        /// <param name="sectionName"></param>
         /// <param name="serviceName"></param>
-        /// <param name="configPath"></param>
         /// <returns></returns>
-        static public TClient GetClient<TClient>(string serviceName, string configPath)
+        static public TClient GetClient<TClient>(string sectionName, string serviceName)
             where TClient : class
         {
-            return GetClient<TClient>(serviceName, configPath, "thriftClient");
+            return GetClient<TClient>(null, sectionName, serviceName);
         }
         /// <summary>
-        /// get proxy
+        /// get client
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
-        /// <param name="serviceName"></param>
         /// <param name="configPath"></param>
         /// <param name="sectionName"></param>
+        /// <param name="serviceName"></param>
         /// <returns></returns>
-        static public TClient GetClient<TClient>(string serviceName, string configPath, string sectionName)
+        static public TClient GetClient<TClient>(string configPath, string sectionName, string serviceName)
             where TClient : class
         {
+            if (string.IsNullOrEmpty(sectionName)) throw new ArgumentNullException("sectionName");
             if (string.IsNullOrEmpty(serviceName)) throw new ArgumentNullException("serviceName");
 
-            _locker.EnterReadLock();
-            try
-            {
-                if (_dicThriftClients.ContainsKey(serviceName)) return _dicThriftClients[serviceName] as TClient;
-            }
-            finally { _locker.ExitReadLock(); }
-
-            _locker.EnterWriteLock();
-            try
-            {
-                if (_dicThriftClients.ContainsKey(serviceName)) return _dicThriftClients[serviceName] as TClient;
-
-                var client = CreateThriftClient(GetConfig(configPath, sectionName), serviceName);
-                if (client == null) throw new InvalidOperationException("create thrift client failed");
-
-                _dicThriftClients[serviceName] = client;
-                return client as TClient;
-            }
-            finally { _locker.ExitWriteLock(); }
+            return _dic.GetOrAdd(string.Concat(configPath ?? "", "/", sectionName, "/", serviceName),
+                key => new Lazy<Tuple<ThriftClient, object>>(() =>
+                    ThriftClientFactory.Create(configPath, sectionName, serviceName),
+                    LazyThreadSafetyMode.ExecutionAndPublication)).Value.Item2 as TClient;
         }
-        #endregion
+
+        /// <summary>
+        /// start all
+        /// </summary>
+        static public void StartAll()
+        {
+            _dic.Values.ToList().ForEach(t => t.Value.Item1.Start());
+        }
+        /// <summary>
+        /// stop all
+        /// </summary>
+        static public void StopAll()
+        {
+            _dic.Values.ToList().ForEach(t => t.Value.Item1.Stop());
+        }
     }
 }

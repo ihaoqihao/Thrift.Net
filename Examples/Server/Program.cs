@@ -13,6 +13,8 @@ namespace Server
             Thrift.Server.ThriftServerManager.Start();
             Console.WriteLine("thrift server started.");
             Console.ReadLine();
+            Thrift.Server.ThriftServerManager.Stop();
+            Console.WriteLine("exit");
         }
     }
 }

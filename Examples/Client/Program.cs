@@ -31,7 +31,18 @@ namespace Client
                 else Console.WriteLine("illegality userId(" + illex.UserId.ToString() + ")");
             }, System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted);
 
+            for (int i = 0; i < 10000; i++)
+            {
+                try { Console.WriteLine(proxy.Sum(i, i).Result); }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+            }
+
             Console.ReadLine();
+            Thrift.Client.ThriftClientManager.StopAll();
+            Console.WriteLine("exit...");
         }
     }
 }

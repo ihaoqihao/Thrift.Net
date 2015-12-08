@@ -165,6 +165,11 @@
             zk node children watcher
             </summary>
         </member>
+        <member name="M:Sodao.Zookeeper.ChildrenWatcher.Finalize">
+            <summary>
+            free
+            </summary>
+        </member>
         <member name="M:Sodao.Zookeeper.ChildrenWatcher.#ctor(Sodao.Zookeeper.IZookClient,System.String,System.Action{System.String[]})">
             <summary>
             new
@@ -186,42 +191,42 @@
             list children
             </summary>
         </member>
-        <member name="M:Sodao.Zookeeper.ChildrenWatcher.Stop">
+        <member name="M:Sodao.Zookeeper.ChildrenWatcher.Dispose">
             <summary>
-            stop
+            dispose
             </summary>
         </member>
-        <member name="T:Sodao.Zookeeper.NodeFactory">
+        <member name="T:Sodao.Zookeeper.NodeCreator">
             <summary>
-            node keeper
+            node creator
             </summary>
         </member>
-        <member name="M:Sodao.Zookeeper.NodeFactory.TryEnsureCreate(Sodao.Zookeeper.IZookClient,Sodao.Zookeeper.NodeInfo,System.Action)">
+        <member name="M:Sodao.Zookeeper.NodeCreator.TryCreate(Sodao.Zookeeper.IZookClient,Sodao.Zookeeper.NodeInfo)">
             <summary>
-            创建节点
+            try create node
             </summary>
             <param name="zk"></param>
             <param name="node"></param>
-            <param name="callback"></param>
+            <returns></returns>
+            <exception cref="T:System.ArgumentNullException">zk is null.</exception>
+            <exception cref="T:System.ArgumentNullException">node is null.</exception>
         </member>
-        <member name="M:Sodao.Zookeeper.NodeFactory.TryEnsureCreate(Sodao.Zookeeper.IZookClient,Sodao.Zookeeper.NodeInfo[],System.Action)">
+        <member name="M:Sodao.Zookeeper.NodeCreator.TryCreate(Sodao.Zookeeper.IZookClient,Sodao.Zookeeper.NodeInfo[])">
             <summary>
-            批量创建一组节点
+            try create nodes
             </summary>
             <param name="zk"></param>
             <param name="nodes"></param>
-            <param name="callback">当所有节点创建完毕时的回调</param>
-            <exception cref="T:System.ArgumentNullException">zk is null.</exception>
-            <exception cref="T:System.ArgumentNullException">nodes is null or empty.</exception>
+            <returns></returns>
         </member>
-        <member name="M:Sodao.Zookeeper.NodeFactory.TryEnsureCreate(Sodao.Zookeeper.IZookClient,Sodao.Zookeeper.NodeInfo[],System.Int32,System.Action)">
+        <member name="M:Sodao.Zookeeper.NodeCreator.TryCreate(Sodao.Zookeeper.IZookClient,Sodao.Zookeeper.NodeInfo[],System.Int32,System.Threading.Tasks.TaskCompletionSource{System.Boolean})">
             <summary>
-            批量创建一组节点
+            try create nodes
             </summary>
             <param name="zk"></param>
             <param name="nodes"></param>
             <param name="index"></param>
-            <param name="callback">当所有节点创建完毕时的回调</param>
+            <param name="source"></param>
         </member>
         <member name="T:Sodao.Zookeeper.NodeInfo">
             <summary>
@@ -262,6 +267,11 @@
             session node
             </summary>
         </member>
+        <member name="M:Sodao.Zookeeper.SessionNode.Finalize">
+            <summary>
+            free
+            </summary>
+        </member>
         <member name="M:Sodao.Zookeeper.SessionNode.#ctor(Sodao.Zookeeper.IZookClient,System.String,System.Byte[],Sodao.Zookeeper.Data.ACL[])">
             <summary>
             new
@@ -277,10 +287,11 @@
             create node
             </summary>
         </member>
-        <member name="M:Sodao.Zookeeper.SessionNode.RemoveNode">
+        <member name="M:Sodao.Zookeeper.SessionNode.RemoveNode(System.Int32)">
             <summary>
-            remove node.
+            remove node
             </summary>
+            <param name="retry"></param>
         </member>
         <member name="M:Sodao.Zookeeper.SessionNode.KeeperStateChanged(Sodao.Zookeeper.Data.KeeperState)">
             <summary>
@@ -288,9 +299,9 @@
             </summary>
             <param name="currentState"></param>
         </member>
-        <member name="M:Sodao.Zookeeper.SessionNode.Close">
+        <member name="M:Sodao.Zookeeper.SessionNode.Dispose">
             <summary>
-            close
+            dispose
             </summary>
         </member>
         <member name="T:Sodao.Zookeeper.KeeperStateChangedHandler">
@@ -1819,9 +1830,9 @@
             a zookeeper watcher interface
             </summary>
         </member>
-        <member name="M:Sodao.Zookeeper.IWatcher.Process(Sodao.Zookeeper.Data.WatchedEvent)">
+        <member name="M:Sodao.Zookeeper.IWatcher.Invoke(Sodao.Zookeeper.Data.WatchedEvent)">
             <summary>
-            处理相关事件
+            invoke event.
             </summary>
             <param name="zevent"></param>
         </member>
@@ -2046,6 +2057,16 @@
             <param name="watcher"></param>
             <returns></returns>
         </member>
+        <member name="M:Sodao.Zookeeper.IZookClient.Start">
+            <summary>
+            start
+            </summary>
+        </member>
+        <member name="M:Sodao.Zookeeper.IZookClient.Stop">
+            <summary>
+            stop
+            </summary>
+        </member>
         <member name="E:Sodao.Zookeeper.IZookClient.KeeperStateChanged">
             <summary>
             keeper state changed event
@@ -2152,20 +2173,21 @@
             <param name="serverPath"></param>
             <returns></returns>
         </member>
-        <member name="T:Sodao.Zookeeper.WatcherWrapper">
+        <member name="T:Sodao.Zookeeper.WatcherAction">
             <summary>
-            watcher wrapper
+            watcher action
             </summary>
         </member>
-        <member name="M:Sodao.Zookeeper.WatcherWrapper.#ctor(System.Action{Sodao.Zookeeper.Data.WatchedEvent})">
+        <member name="M:Sodao.Zookeeper.WatcherAction.#ctor(System.Action{Sodao.Zookeeper.Data.WatchedEvent})">
             <summary>
             new
             </summary>
             <param name="callback"></param>
+            <exception cref="T:System.ArgumentNullException">callback is null.</exception>
         </member>
-        <member name="M:Sodao.Zookeeper.WatcherWrapper.Process(Sodao.Zookeeper.Data.WatchedEvent)">
+        <member name="M:Sodao.Zookeeper.WatcherAction.Invoke(Sodao.Zookeeper.Data.WatchedEvent)">
             <summary>
-            process
+            invoke event.
             </summary>
             <param name="zevent"></param>
         </member>
@@ -2214,11 +2236,6 @@
             zookeeper client
             </summary>
         </member>
-        <member name="M:Sodao.Zookeeper.ZookClient.Finalize">
-            <summary>
-            new
-            </summary>
-        </member>
         <member name="M:Sodao.Zookeeper.ZookClient.#ctor(System.String,System.String,System.TimeSpan,Sodao.Zookeeper.IWatcher)">
             <summary>
             new
@@ -2228,6 +2245,12 @@
             <param name="sessionTimeout"></param>
             <param name="defaultWatcher"></param>
             <exception cref="T:System.ArgumentNullException">connectionString is null or empty.</exception>
+        </member>
+        <member name="M:Sodao.Zookeeper.ZookClient.IsActive">
+            <summary>
+            true is active
+            </summary>
+            <returns></returns>
         </member>
         <member name="M:Sodao.Zookeeper.ZookClient.OnEndPointAlready(System.String,Sodao.FastSocket.SocketBase.IConnection)">
             <summary>
@@ -2249,6 +2272,16 @@
             </summary>
             <param name="connection"></param>
             <param name="message"></param>
+        </member>
+        <member name="M:Sodao.Zookeeper.ZookClient.Start">
+            <summary>
+            start
+            </summary>
+        </member>
+        <member name="M:Sodao.Zookeeper.ZookClient.Stop">
+            <summary>
+            stop
+            </summary>
         </member>
         <member name="M:Sodao.Zookeeper.ZookClient.AddAuthInfo(System.String,System.Byte[])">
             <summary>
@@ -2567,8 +2600,9 @@
             <param name="buffer"></param>
             <param name="readlength"></param>
             <returns></returns>
+            <exception cref="T:Sodao.FastSocket.Client.Protocol.BadProtocolException"></exception>
         </member>
-        <member name="P:Sodao.Zookeeper.ZookProtocol.DefaultSyncSeqId">
+        <member name="P:Sodao.Zookeeper.ZookProtocol.DefaultSyncSeqID">
             <summary>
             defautl seqId
             </summary>
@@ -2638,7 +2672,7 @@
             <param name="path"></param>
             <returns></returns>
         </member>
-        <member name="P:Sodao.Zookeeper.ZookResponse.SeqId">
+        <member name="P:Sodao.Zookeeper.ZookResponse.SeqID">
             <summary>
             get seqId
             </summary>
